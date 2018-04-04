@@ -5,4 +5,4 @@ class PrintheadController():
 
 
     def __init__(self):
-        print('Prinhead Controller initialized...')
+        print('Printhead Controller initialized...')
