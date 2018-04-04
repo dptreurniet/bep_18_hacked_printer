@@ -12,7 +12,7 @@ class MainController():
     def __init__(self):
         self.motion_stage_controller = MotionStageController()
         self.printhead_controller = PrintheadController()
-        print('Main Controller initialized...'')
+        print('Main Controller initialized...')
 
     def main_loop(self):
         pass
