@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-class Sequence_factory():
+class SequenceFactory():
     """
     Nozzle selection and quality sequence generator
     Written by Daan Treurniet, april 3, 2018
@@ -30,36 +30,36 @@ class Sequence_factory():
     def __init__(self):
         print("Sequence factory initialized...")
 
-    def __nozzle_to_pulse_black(self, nozzle):
+    def _nozzle_to_pulse_black(self, nozzle):
         if nozzle >= 61: return (30-(nozzle-60))*2+1
         if nozzle <= 30: return (116-nozzle)*2+1
         else: return (73-(nozzle-30))*2+1
-    def __nozzle_to_pulse_cyan(self, nozzle): return (116-nozzle)*2+1
-    def __nozzle_to_pulse_magenta(self, nozzle): return (73-(nozzle))*2+1
-    def __nozzle_to_pulse_yellow(self, nozzle): return (30-(nozzle))*2+1
+    def _nozzle_to_pulse_cyan(self, nozzle): return (116-nozzle)*2+1
+    def _nozzle_to_pulse_magenta(self, nozzle): return (73-(nozzle))*2+1
+    def _nozzle_to_pulse_yellow(self, nozzle): return (30-(nozzle))*2+1
 
-    def __get_selection_block(self,
+    def _get_selection_block(self,
                               nozzles_black, nozzles_cyan,
                               nozzles_yellow, nozzles_magenta):
         tmp_data_black = [0]*256
         tmp_data_color = [0]*256
         # Populate black nozzle data
         for nozzle_b in nozzles_black:
-            tmp_data_black[self.__nozzle_to_pulse_black(nozzle_b)] = 1
-            tmp_data_black[self.__nozzle_to_pulse_black(nozzle_b)+1] = 1
+            tmp_data_black[self._nozzle_to_pulse_black(nozzle_b)] = 1
+            tmp_data_black[self._nozzle_to_pulse_black(nozzle_b)+1] = 1
         # Populate color nozzle data
         for nozzle_c in nozzles_cyan:
-            tmp_data_color[self.__nozzle_to_pulse_cyan(nozzle_c)] = 1
-            tmp_data_color[self.__nozzle_to_pulse_cyan(nozzle_c)+1] = 1
+            tmp_data_color[self._nozzle_to_pulse_cyan(nozzle_c)] = 1
+            tmp_data_color[self._nozzle_to_pulse_cyan(nozzle_c)+1] = 1
         for nozzle_m in nozzles_magenta:
-            tmp_data_color[self.__nozzle_to_pulse_magenta(nozzle_m)] = 1
-            tmp_data_color[self.__nozzle_to_pulse_magenta(nozzle_m)+1] = 1
+            tmp_data_color[self._nozzle_to_pulse_magenta(nozzle_m)] = 1
+            tmp_data_color[self._nozzle_to_pulse_magenta(nozzle_m)+1] = 1
         for nozzle_y in nozzles_yellow:
-            tmp_data_color[self.__nozzle_to_pulse_yellow(nozzle_y)] = 1
-            tmp_data_color[self.__nozzle_to_pulse_yellow(nozzle_y)+1] = 1
+            tmp_data_color[self._nozzle_to_pulse_yellow(nozzle_y)] = 1
+            tmp_data_color[self._nozzle_to_pulse_yellow(nozzle_y)+1] = 1
         return (tmp_data_black, tmp_data_color)
 
-    def __get_quality_sequence(self, quality):
+    def _get_quality_sequence(self, quality):
         tmp_data = [0]*64
 
         if quality == 'economy': i_list = [40,50,52,54,56]
@@ -90,7 +90,7 @@ class Sequence_factory():
         for i in range(64):
             data_clock.extend([0,1,1,0])
         if size == 'large' or size == 'medium':
-            tmp_data = self.__get_selection_block(nozzles_black, nozzles_cyan, nozzles_yellow, nozzles_magenta)
+            tmp_data = self._get_selection_block(nozzles_black, nozzles_cyan, nozzles_yellow, nozzles_magenta)
             data_black.extend(tmp_data[0])
             data_color.extend(tmp_data[1])
         else:
@@ -107,7 +107,7 @@ class Sequence_factory():
         for i in range(64):
             data_clock.extend([0,1,1,0])
         if size == 'large' or size == 'small':
-            tmp_data = self.__get_selection_block(nozzles_black, nozzles_cyan, nozzles_yellow, nozzles_magenta)
+            tmp_data = self._get_selection_block(nozzles_black, nozzles_cyan, nozzles_yellow, nozzles_magenta)
             data_black.extend(tmp_data[0])
             data_color.extend(tmp_data[1])
         else:
@@ -123,7 +123,7 @@ class Sequence_factory():
         # Phase 5: quality selection pulses
         for i in range(16):
             data_clock.extend([0,1,1,0])
-        tmp_data = self.__get_quality_sequence(quality)
+        tmp_data = self._get_quality_sequence(quality)
         data_black.extend(tmp_data)
         data_color.extend(tmp_data)
 
@@ -141,7 +141,3 @@ class Sequence_factory():
             plt.show()
 
         return (data_clock, data_black, data_color)
-
-
-seq_factory = Sequence_factory()
-seq_factory.get_sequence(nozzles_black=range(40,51), nozzles_cyan=range(10,21), size='large', quality='VSD2')
