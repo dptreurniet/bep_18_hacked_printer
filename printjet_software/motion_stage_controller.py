@@ -44,7 +44,11 @@ class MotionStageController():
                 diff_x = self.pos[0]-position[0]
                 diff_y = self.pos[1]-position[1]
                 if log: print("Exited move_to_position normally with dx=%s, dy=%s"%(diff_x, diff_y))
+<<<<<<< HEAD
                 #self.pos = position
+=======
+                self.pos = position
+>>>>>>> c3719997921bd3901ecee55c8065a3a5b5898fb1
                 break
 
             # Check if the max number of steps is not exceeded
