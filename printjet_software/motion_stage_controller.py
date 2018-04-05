@@ -7,16 +7,31 @@ class MotionStageController():
     This class takes care of controller the motion stage.
     """
 
+    #TODO implement hard limits (switches)
+    #TODO implement soft limits
 
     def __init__(self):
         self.x_stage = Stage('x_stage', 200, 1, 26, 8, 9, 1)
         self.y_stage = Stage('y_stage', 200, 1, 26, 8, 9, 1)
 
-        self.log_pos = []
         self.log_goals = []
 
         self.pos = [0, 0]
         print('Motion Stage Controller initialized...')
+
+    def home_stage(self, stage):
+        if stage=='x':
+            self.x_stage.home()
+            return True
+        if stage=='y':
+            self.y_stage.home()
+            return True
+        else: return False
+
+    def home_stages(self):
+        self.home_stage('x')
+        self.home_stage('y')
+        return True
 
     def move_to_position(self, position, log=True, debug=False):
         if log: print('\nStarting move_to_position from %s to %s'%(self.pos, position))
@@ -45,12 +60,12 @@ class MotionStageController():
                 diff_y = self.pos[1]-position[1]
                 if log: print("Exited move_to_position normally with dx=%s, dy=%s"%(diff_x, diff_y))
                 #self.pos = position
-                break
+                return True
 
             # Check if the max number of steps is not exceeded
             if step_counter > max(max_steps_x, max_steps_y):
                 print("\nWarning: Stopped move_to_position because max steps exceeded.")
-                break
+                return False
 
 
 
@@ -75,27 +90,24 @@ class MotionStageController():
             possible_slopes = map(abs, [slope1-goal_slope, slope2-goal_slope, slope3-goal_slope])
             if debug: print('possible_slopes: %s'%([slope1, slope2, slope3]))
 
-            # Exectute stepping
             best_option = possible_slopes.index(min(possible_slopes))
             if debug: print('best_option: %s'%(best_option))
             if best_option == 0: step_x = True
             if best_option == 1: step_y = True
             if best_option == 2: step_x, step_y = True, True
 
-            if step_x:
-                self.x_stage.step(dirs[0])
-                self.pos[0] += dirs[0]*self.x_stage.stepsize
-            if step_y:
-                self.y_stage.step(dirs[1])
-                self.pos[1] += dirs[1]*self.y_stage.stepsize
+            # Exectute stepping
+            self.x_stage.step(dirs[0], step_x)
+            self.y_stage.step(dirs[1], step_y)
+
+            self.pos = [self.x_stage.pos, self.y_stage.pos]
             step_counter += 1
 
-            self.log_pos.append(self.pos[:])
-
     def plot_log(self):
-        x_data = [self.log_pos[i][0] for i in range(len(self.log_pos))]
-        y_data = [self.log_pos[i][1] for i in range(len(self.log_pos))]
-        plt.plot(x_data, y_data)
+        log_pos_x = []
+        log_pos_y = []
+
+        plt.plot(self.x_stage.log, self.y_stage.log)
 
         x_data = [self.log_goals[i][0] for i in range(len(self.log_goals))]
         y_data = [self.log_goals[i][1] for i in range(len(self.log_goals))]
@@ -104,7 +116,9 @@ class MotionStageController():
         plt.show()
 
     def clear_log(self):
-        self.log = []
+        self.x_stage.clear_log()
+        self.y_stage.clear_log()
+        self.log_goals = []
 
 
 
@@ -113,18 +127,44 @@ class MotionStageController():
 class Stage():
     def __init__(self, name, steps_per_rev, leadscrew_pitch, motion_range, pin_dir, pin_step, ms=1):
         self.name = name
+
         self.steps_per_rev = steps_per_rev
         self.leadscrew_pitch = leadscrew_pitch
+
         self.range = motion_range
+        self.soft_padding = 0
+
         self.pin_dir = pin_dir
         self.pin_step = pin_step
-        self.ms = ms
-        self.stepsize = float(self.leadscrew_pitch) / float(self.steps_per_rev)
 
-    def step(self, dir):
-        # TODO: implement step with direction
-        #print('Stepping %s'%(self.name))
+        self.ms = ms #microstepping
+
+        self.stepsize = float(self.leadscrew_pitch) / float(self.steps_per_rev)
+        self.pos = 0
+        self.is_homed = False
+        self.log = []
+
+    def step(self, direction, step, disable_softstop=False):
+        if step:
+            new_pos = self.pos+direction*self.stepsize
+            if ((new_pos < self.range-self.soft_padding and new_pos > self.soft_padding) or
+                disable_softstop):
+                self.pos += direction*self.stepsize
+                # TODO: implement step with direction
+            #print('Stepping %s'%(self.name))
+        self.log.append(self.pos)
         return True
+
+    def clear_log(self): self.log = []
+
+    def home(self):
+        #TODO move stage until limit switch is triggered
+        self.pos = 0
+        #TODO move stage inside soft boundaries
+        self.is_homed = True
+        return True
+
+
 
 
 
