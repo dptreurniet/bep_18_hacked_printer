@@ -33,7 +33,12 @@ class MotionStageController():
         self.home_stage('y')
         return True
 
-    def move_to_position(self, position, log=True, debug=False):
+    def update_position(self):
+        self.pos = [self.x_stage.pos, self.y_stage.pos]
+        return True
+
+    def move_to_position(self, position, log=False, debug=False):
+        self.update_position()
         if log: print('\nStarting move_to_position from %s to %s'%(self.pos, position))
         self.log_goals.append(position)
         position = [float(i) for i in position]
@@ -58,13 +63,16 @@ class MotionStageController():
                 abs(position[1] - self.pos[1])<=(self.y_stage.stepsize)/2.0):
                 diff_x = self.pos[0]-position[0]
                 diff_y = self.pos[1]-position[1]
-                if log: print("Exited move_to_position normally with dx=%s, dy=%s"%(diff_x, diff_y))
+                if log:
+                    print("Exited move_to_position normally with dx=%s, dy=%s"%(diff_x, diff_y))
+                    print('Current position: %s, %s'%(self.x_stage.pos, self.y_stage.pos))
                 #self.pos = position
                 return True
 
             # Check if the max number of steps is not exceeded
             if step_counter > max(max_steps_x, max_steps_y):
                 print("\nWarning: Stopped move_to_position because max steps exceeded.")
+                print('Current position: %s, %s'%(self.x_stage.pos, self.y_stage.pos))
                 return False
 
 
@@ -100,7 +108,7 @@ class MotionStageController():
             self.x_stage.step(dirs[0], step_x)
             self.y_stage.step(dirs[1], step_y)
 
-            self.pos = [self.x_stage.pos, self.y_stage.pos]
+            self.update_position()
             step_counter += 1
 
     def plot_log(self):
@@ -139,7 +147,7 @@ class Stage():
 
         self.ms = ms #microstepping
 
-        self.stepsize = float(self.leadscrew_pitch) / float(self.steps_per_rev)
+        self.stepsize = (float(self.leadscrew_pitch) / float(self.steps_per_rev))/self.ms
         self.pos = 0
         self.is_homed = False
         self.log = []
@@ -147,21 +155,34 @@ class Stage():
     def step(self, direction, step, disable_softstop=False):
         if step:
             new_pos = self.pos+direction*self.stepsize
-            if ((new_pos < self.range-self.soft_padding and new_pos > self.soft_padding) or
+            # Check if goal position is within soft limits
+            # 1e-10 is added to account for floating point accuracy
+            if ((new_pos <= self.range-self.soft_padding+1e-10 and new_pos >= self.soft_padding-1e-10) or
                 disable_softstop):
+                self.pulse_step_pin()
                 self.pos += direction*self.stepsize
-                # TODO: implement step with direction
+            else:
+                print('Not moving %s due to softstop. Current position: %s'%(self.name, self.pos))
+                print('Trying to move from %s to %s'%(self.pos, self.pos+direction*self.stepsize))
             #print('Stepping %s'%(self.name))
         self.log.append(self.pos)
         return True
 
-    def clear_log(self): self.log = []
+    def pulse_step_pin(self):
+        #TODO implement pulsing the step pin
+        pass
+
+    def clear_log(self):
+        self.log = []
+        return True
 
     def home(self):
+        print('\nHoming %s... '%(self.name))
         #TODO move stage until limit switch is triggered
         self.pos = 0
         #TODO move stage inside soft boundaries
         self.is_homed = True
+        print('Success')
         return True
 
 
