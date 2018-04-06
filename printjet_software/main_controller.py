@@ -3,10 +3,12 @@
 # This is the main controller of the printjet system,
 # which controls all aspects of the printer
 
+import sys
+print('System is running on %s'%(sys.version))
+
 
 from motion_stage_controller import MotionStageController
 from printhead_controller import PrintheadController
-
 
 class MainController():
     def __init__(self):
