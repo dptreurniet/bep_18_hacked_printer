@@ -1,4 +1,3 @@
-import matplotlib.pyplot as plt
 class SequenceFactory():
     """
     Nozzle selection and quality sequence generator
@@ -81,9 +80,9 @@ class SequenceFactory():
         nozzles_magenta = list(nozzles_magenta)
         nozzles_yellow = list(nozzles_yellow)
 
+        data_clock = [0,0]
         data_black = [0]
         data_color = [0]
-        data_clock = [0]
 
         # PHASE 1: first selection of nozzles
         # Init clock and empty data lines
@@ -94,6 +93,7 @@ class SequenceFactory():
             data_black.extend(tmp_data[0])
             data_color.extend(tmp_data[1])
         else:
+            data_clock.append(0)
             data_black.extend([0]*256)
             data_color.extend([0]*256)
 
@@ -130,6 +130,8 @@ class SequenceFactory():
         # Phase 6: append zeroes for good measure
         data_clock.append(0)
         data_black.append(0)
+        data_black.append(0)
+        data_color.append(0)
         data_color.append(0)
 
 
