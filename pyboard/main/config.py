@@ -27,3 +27,9 @@ NCHG =          'Y6'
 
 # DAC
 DAC =           'X5'
+
+
+###################### MISC #########################
+
+STAGE_MICROSTEPPING = 16
+STAGE_RANGE = (100, 100)
